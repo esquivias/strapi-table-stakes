@@ -2,13 +2,15 @@
 
 Restore essential CMS features to Strapi v5 Community Edition
 
+Use this at your own risk.
+
 ## Features
 
-### Audit Logs
+### Audits
 Track document operations for accountability and compliance.
 
 ### Snapshots
-Restore to previous document snapshot.
+Restore to a previous document snapshot.
 
 ### Tasks
 Schedule publish / unpublish operations on one or more documents.
