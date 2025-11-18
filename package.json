@@ -60,10 +60,10 @@
     "kind": "plugin",
     "name": "strapi-table-stakes",
     "displayName": "Table Stakes",
-    "description": "Restore essential CMS features to Strapi v5 Community Edition"
+    "description": "Provide essential CMS features to Strapi v5 Community Edition"
   },
   "name": "strapi-table-stakes",
-  "description": "Restore essential CMS features to Strapi v5 Community Edition",
+  "description": "Provide essential CMS features to Strapi v5 Community Edition",
   "license": "MIT",
   "author": "Daniel Esquivias"
 }
