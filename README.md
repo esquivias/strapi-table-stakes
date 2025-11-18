@@ -1,19 +1,19 @@
 # Strapi Table Stakes
 
-Restore essential CMS features to Strapi v5 Community Edition
+Provide essential CMS features to Strapi v5 Community Edition
 
-Use this at your own risk.
+This is a proof-of-concept plugin, use this at your own risk.
 
 ## Features
 
 ### Audits
-Track document operations for accountability and compliance.
+Automatically track document operations for compliance and accountability.
 
 ### Snapshots
-Restore to a previous document snapshot.
+Restore a document to a previous version.
 
 ### Tasks
-Schedule publish / unpublish operations on one or more documents.
+Schedule publish and unpublish operations on one or more documents.
 
 ## Development
 
