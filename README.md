@@ -35,7 +35,7 @@ npx yalc publish
 
 In the `strapi` directory:
 ```shell
-npx yalc add strapi-table-stakes
+npx yalc add strapi-table-stakes && npx yalc link strapi-table-stakes    
 ```
 
 #### Start Development
@@ -50,15 +50,24 @@ In the `strapi` directory:
 npm run dev
 ```
 
+##### Troubleshooting
+Delete caches and try the steps listed above if plugin changes are not reflected in Strapi:
+
+- `.strapi`
+- `.tmp`
+- `.yalk`
+- `dist`
+- `yalk.lock`
+
 ### Overview
 
 ```mermaid
   flowchart TB
-    TableStakes[("Table Stakes Plugin")]
-    TableStakes -.auto-capture.-> Audits
-    TableStakes -.schedule.-> Tasks
-    Audits -->|contain| Snapshots
-    Tasks -.execute.-> Audits
-    Snapshots -.enable.-> Restores
-    Restores -.create.-> Audits
+  TableStakes[("Table Stakes Plugin")]
+  TableStakes -.auto-capture.-> Audits
+  TableStakes -.schedule.-> Tasks
+  Audits -->|contain| Snapshots
+  Tasks -.execute.-> Audits
+  Snapshots -.enable.-> Restores
+  Restores -.create.-> Audits
 ```
