@@ -37,7 +37,7 @@ const audit = ({ strapi }: { strapi: Core.Strapi }) => ({
       });
     } catch (error) {
       // Log error but don't break the operation
-      strapi.log.error('Failed to create audit log:', error);
+      strapi.log.error('Failed to create audit log (capture):', error);
     }
   },
 });

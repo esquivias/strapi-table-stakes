@@ -1,6 +1,9 @@
 import type { Core } from '@strapi/strapi';
+import auditService from './services/audit';
 
 const bootstrap = ({ strapi }: { strapi: Core.Strapi }) => {
+  // Initialize the audit service
+  const audit = auditService({ strapi });
   // bootstrap phase
   strapi.documents.use(async (ctx, next) => {
     const { uid, action, params } = ctx;
@@ -35,7 +38,7 @@ const bootstrap = ({ strapi }: { strapi: Core.Strapi }) => {
     // Capture audit (async, don't block)
     setImmediate(async () => {
       try {
-        await strapi.plugin('strapi-table-stakes').service('audit').capture({
+        await audit.capture({
           uid,
           action,
           before,

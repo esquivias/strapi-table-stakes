@@ -1,5 +1,5 @@
-import service from './service';
+import audit from './audit';
 
 export default {
-  service,
+  audit,
 };
