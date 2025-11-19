@@ -1,1 +1,5 @@
-export default {};
+import audit from './audit';
+
+export default {
+  'audit': audit,
+};
