@@ -1,0 +1,51 @@
+{
+  "kind": "collectionType",
+  "collectionName": "table_stakes_tasks",
+  "info": {
+    "singularName": "task",
+    "pluralName": "tasks",
+    "displayName": "Tasks",
+    "description": "Schedule publish and unpublish operations on one or more documents"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "documents": {
+      "type": "json",
+      "required": true,
+      "description": "Array of documents to operate on: [{ content_type, document_id, operation, locale }]"
+    },
+    "scheduled_at": {
+      "type": "datetime",
+      "required": true,
+      "description": "When to execute this task"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["pending", "completed", "partial", "failed", "cancelled"],
+      "default": "pending",
+      "required": true
+    },
+    "executed_at": {
+      "type": "datetime",
+      "description": "When the task was executed"
+    },
+    "results": {
+      "type": "json",
+      "description": "Results for each document operation"
+    },
+    "error_message": {
+      "type": "text",
+      "description": "Error details if task failed"
+    }
+  }
+}
