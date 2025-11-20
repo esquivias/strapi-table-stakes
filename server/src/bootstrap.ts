@@ -5,6 +5,14 @@ const bootstrap = ({ strapi }: { strapi: Core.Strapi }) => {
   // Initialize the audit service
   const audit = auditService({ strapi });
 
+  // Register cron task to process scheduled tasks every minute
+  strapi.cron.add({
+    '0 * * * * *': async () => {
+      const taskService = strapi.plugin('strapi-table-stakes').service('task');
+      await taskService.processPendingTasks();
+    },
+  });
+
   // bootstrap phase
   strapi.documents.use(async (ctx, next) => {
     const { uid, action, params } = ctx;
