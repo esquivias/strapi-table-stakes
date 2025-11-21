@@ -28,7 +28,7 @@ export default {
   },
 
   async bootstrap(app: any) {
-    // Inject sidebar panel into content manager
+    // Inject sidebar panels into content manager
     const contentManagerPlugin = app.getPlugin('content-manager');
 
     console.log('Content Manager Plugin:', contentManagerPlugin);
@@ -38,21 +38,38 @@ export default {
     }
 
     if (contentManagerPlugin) {
-      // Import the component synchronously at bootstrap time
+      // Import the components synchronously at bootstrap time
       const { TasksSidePanel } = await import('./components/TasksSidePanel');
+      const { SnapshotsSidePanel } = await import('./components/SnapshotsSidePanel');
 
       // Try the correct injection method for Strapi v5
       if (contentManagerPlugin.injectComponent) {
         console.log('Using injectComponent method');
+
+        // Inject Tasks panel
         contentManagerPlugin.injectComponent('editView', 'right-links', {
           name: 'tasks-side-panel',
           Component: TasksSidePanel,
         });
+
+        // Inject Snapshots panel
+        contentManagerPlugin.injectComponent('editView', 'right-links', {
+          name: 'snapshots-side-panel',
+          Component: SnapshotsSidePanel,
+        });
       } else if (contentManagerPlugin.apis?.injectContentManagerComponent) {
         console.log('Using apis.injectContentManagerComponent method');
+
+        // Inject Tasks panel
         contentManagerPlugin.apis.injectContentManagerComponent('editView', 'right-links', {
           name: 'tasks-side-panel',
           Component: TasksSidePanel,
+        });
+
+        // Inject Snapshots panel
+        contentManagerPlugin.apis.injectContentManagerComponent('editView', 'right-links', {
+          name: 'snapshots-side-panel',
+          Component: SnapshotsSidePanel,
         });
       } else {
         console.warn('Could not find method to inject component into content manager');
