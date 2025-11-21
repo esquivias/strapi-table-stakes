@@ -19,6 +19,12 @@
     }
   },
   "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 255,
+      "description": "Name of the task"
+    },
     "documents": {
       "type": "json",
       "required": true,
