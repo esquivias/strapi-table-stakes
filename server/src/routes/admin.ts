@@ -1,4 +1,13 @@
 export default [
+  // Audits routes for admin panel
+  {
+    method: 'GET',
+    path: '/audits',
+    handler: 'audits.find',
+    config: {
+      policies: [],
+    },
+  },
   // Tasks CRUD routes for admin panel
   {
     method: 'GET',
