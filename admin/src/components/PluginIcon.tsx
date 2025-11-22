@@ -2,4 +2,4 @@ import { ChartCircle } from '@strapi/icons';
 
 const PluginIcon = () => <ChartCircle />;
 
-export { ChartCircle };
+export { PluginIcon };
