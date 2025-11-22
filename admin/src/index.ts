@@ -1,7 +1,8 @@
-import { getTranslation } from './utils/getTranslation';
 import { PLUGIN_ID } from './pluginId';
 import { Initializer } from './components/Initializer';
 import { PluginIcon } from './components/PluginIcon';
+import { TasksPanel } from './components/TasksPanel';
+import { RestoreSnapshotAction } from './components/RestoreSnapshotAction';
 
 export default {
   register(app: any) {
@@ -25,56 +26,24 @@ export default {
       isReady: false,
       name: PLUGIN_ID,
     });
+
+    // Register sidebar panels using addEditViewSidePanel API
+    const contentManagerPluginApis = app.getPlugin('content-manager').apis;
+
+    if (
+      'addEditViewSidePanel' in contentManagerPluginApis &&
+      typeof contentManagerPluginApis.addEditViewSidePanel === 'function'
+    ) {
+      contentManagerPluginApis.addEditViewSidePanel([TasksPanel]);
+    }
   },
 
-  async bootstrap(app: any) {
-    // Inject sidebar panels into content manager
-    const contentManagerPlugin = app.getPlugin('content-manager');
+  bootstrap(app: any) {
+    // Register document actions
+    const { addDocumentAction } = app.getPlugin('content-manager').apis;
 
-    console.log('Content Manager Plugin:', contentManagerPlugin);
-    console.log('Available methods:', Object.keys(contentManagerPlugin || {}));
-    if (contentManagerPlugin?.apis) {
-      console.log('APIs:', Object.keys(contentManagerPlugin.apis));
-    }
-
-    if (contentManagerPlugin) {
-      // Import the components synchronously at bootstrap time
-      const { TasksSidePanel } = await import('./components/TasksSidePanel');
-      const { SnapshotsSidePanel } = await import('./components/SnapshotsSidePanel');
-
-      // Try the correct injection method for Strapi v5
-      if (contentManagerPlugin.injectComponent) {
-        console.log('Using injectComponent method');
-
-        // Inject Tasks panel
-        contentManagerPlugin.injectComponent('editView', 'right-links', {
-          name: 'tasks-side-panel',
-          Component: TasksSidePanel,
-        });
-
-        // Inject Snapshots panel
-        contentManagerPlugin.injectComponent('editView', 'right-links', {
-          name: 'snapshots-side-panel',
-          Component: SnapshotsSidePanel,
-        });
-      } else if (contentManagerPlugin.apis?.injectContentManagerComponent) {
-        console.log('Using apis.injectContentManagerComponent method');
-
-        // Inject Tasks panel
-        contentManagerPlugin.apis.injectContentManagerComponent('editView', 'right-links', {
-          name: 'tasks-side-panel',
-          Component: TasksSidePanel,
-        });
-
-        // Inject Snapshots panel
-        contentManagerPlugin.apis.injectContentManagerComponent('editView', 'right-links', {
-          name: 'snapshots-side-panel',
-          Component: SnapshotsSidePanel,
-        });
-      } else {
-        console.warn('Could not find method to inject component into content manager');
-        console.warn('Available plugin structure:', contentManagerPlugin);
-      }
+    if (typeof addDocumentAction === 'function') {
+      addDocumentAction([RestoreSnapshotAction]);
     }
   },
 
