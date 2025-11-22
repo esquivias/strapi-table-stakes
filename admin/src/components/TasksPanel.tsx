@@ -28,43 +28,13 @@ interface Task {
   status: 'pending' | 'completed' | 'partial' | 'failed';
 }
 
-interface TasksSidePanelProps {
-  model?: string; // Content type UID (e.g., 'api::article.article')
-  documentId?: string; // Current document ID
-  slug?: string; // Alternative name for model from content manager
-  id?: string; // Alternative name for documentId from content manager
-}
-
-export const TasksSidePanel = ({ model, documentId, slug, id }: TasksSidePanelProps) => {
-  // Get document ID from URL params if not passed as props
-  const params = useParams<{ id?: string }>();
-
-  // Content manager may pass slug/id instead of model/documentId
-  const contentType = model || slug || '';
-  const docId = documentId || id || params.id || '';
-
-  console.log('TasksSidePanel props:', { model, documentId, slug, id, params, contentType, docId });
-
-  if (!contentType) {
-    return (
-      <Box padding={4}>
-        <Typography variant="omega" textColor="neutral600">
-          No content type detected
-        </Typography>
-      </Box>
-    );
-  }
-
-  if (!docId) {
-    return (
-      <Box padding={4}>
-        <Typography variant="omega" textColor="neutral600">
-          Document not saved yet
-        </Typography>
-      </Box>
-    );
-  }
+const TasksPanelContent = () => {
+  const params = useParams<{ slug?: string; id?: string; collectionType?: string }>();
   const { get, put } = useFetchClient();
+
+  const contentType = params.slug || '';
+  const docId = params.id || '';
+
   const [pendingTasks, setPendingTasks] = useState<Task[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<string>('');
   const [selectedOperation, setSelectedOperation] = useState<'publish' | 'unpublish'>('publish');
@@ -72,28 +42,27 @@ export const TasksSidePanel = ({ model, documentId, slug, id }: TasksSidePanelPr
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadPendingTasks();
+    if (contentType && docId) {
+      loadPendingTasks();
+    }
   }, [contentType, docId]);
 
   const loadPendingTasks = async () => {
     try {
       setLoading(true);
-      console.log('Loading pending tasks for:', { contentType, docId });
-
-      // Load all pending tasks
       const res = await get('/strapi-table-stakes/tasks?status=pending');
       const tasks = Array.isArray(res.data) ? res.data : [];
-      console.log('Loaded pending tasks:', tasks);
 
-      setPendingTasks(tasks);
+      // Filter to only show tasks scheduled in the future
+      const now = new Date();
+      const upcomingTasks = tasks.filter((task: Task) => new Date(task.scheduled_at) > now);
+      setPendingTasks(upcomingTasks);
 
-      // Find tasks that contain this document
-      const tasksWithDoc = tasks.filter((task: Task) =>
+      const tasksWithDoc = upcomingTasks.filter((task: Task) =>
         task.documents.some(
           (doc) => doc.content_type === contentType && doc.document_id === docId
         )
       );
-      console.log('Tasks containing this document:', tasksWithDoc);
       setTasksWithDocument(tasksWithDoc);
     } catch (error) {
       console.error('Failed to load pending tasks:', error);
@@ -103,27 +72,18 @@ export const TasksSidePanel = ({ model, documentId, slug, id }: TasksSidePanelPr
   };
 
   const addToTask = async () => {
-    if (!selectedTaskId) {
-      alert('Please select a task');
-      return;
-    }
+    if (!selectedTaskId) return;
 
     try {
       const task = pendingTasks.find((t) => t.documentId === selectedTaskId);
       if (!task) return;
 
-      // Check if document already in task
       const alreadyInTask = task.documents.some(
         (doc) => doc.content_type === contentType && doc.document_id === docId
       );
 
-      if (alreadyInTask) {
-        alert('This document is already in the selected task');
-        return;
-      }
+      if (alreadyInTask) return;
 
-
-      // Add document to task
       const updatedDocuments = [
         ...task.documents,
         {
@@ -140,20 +100,15 @@ export const TasksSidePanel = ({ model, documentId, slug, id }: TasksSidePanelPr
         status: task.status,
       });
 
-      alert(`Document added to task: ${task.name}`);
-      loadPendingTasks(); // Reload to update the list
+      loadPendingTasks();
       setSelectedTaskId('');
     } catch (error) {
       console.error('Failed to add document to task:', error);
-      alert('Failed to add document to task');
     }
   };
 
   const removeFromTask = async (task: Task) => {
-    if (!confirm(`Remove this document from "${task.name}"?`)) return;
-
     try {
-      // Filter out this document
       const updatedDocuments = task.documents.filter(
         (doc) => !(doc.content_type === contentType && doc.document_id === docId)
       );
@@ -165,17 +120,14 @@ export const TasksSidePanel = ({ model, documentId, slug, id }: TasksSidePanelPr
         status: task.status,
       });
 
-      alert('Document removed from task');
-      loadPendingTasks(); // Reload to update the list
+      loadPendingTasks();
     } catch (error) {
       console.error('Failed to remove document from task:', error);
-      alert('Failed to remove document from task');
     }
   };
 
   const updateOperation = async (task: Task, newOperation: 'publish' | 'unpublish') => {
     try {
-      // Update the operation for this document in the task
       const updatedDocuments = task.documents.map((doc) => {
         if (doc.content_type === contentType && doc.document_id === docId) {
           return { ...doc, operation: newOperation };
@@ -190,28 +142,18 @@ export const TasksSidePanel = ({ model, documentId, slug, id }: TasksSidePanelPr
         status: task.status,
       });
 
-      alert('Operation updated');
-      loadPendingTasks(); // Reload to update the list
+      loadPendingTasks();
     } catch (error) {
       console.error('Failed to update operation:', error);
-      alert('Failed to update operation');
     }
   };
 
   if (loading) {
-    return (
-      <Box padding={4}>
-        <Typography>Loading...</Typography>
-      </Box>
-    );
+    return <Typography>Loading...</Typography>;
   }
 
   return (
-    <Box padding={4}>
-      <Typography variant="sigma" textColor="neutral600" marginBottom={2}>
-        SCHEDULED TASKS
-      </Typography>
-
+    <Box>
       {/* Add to Task Section */}
       <Box marginBottom={4}>
         <Field.Root>
@@ -273,7 +215,7 @@ export const TasksSidePanel = ({ model, documentId, slug, id }: TasksSidePanelPr
           <Divider marginTop={2} marginBottom={2} />
           <Box marginTop={4}>
             <Typography variant="sigma" textColor="neutral600" marginBottom={2}>
-              IN TASKS ({tasksWithDocument.length})
+              UPCOMING TASKS ({tasksWithDocument.length})
             </Typography>
 
             <Flex direction="column" alignItems="stretch" gap={3}>
@@ -284,12 +226,7 @@ export const TasksSidePanel = ({ model, documentId, slug, id }: TasksSidePanelPr
                 if (!doc) return null;
 
                 return (
-                  <Box
-                    key={task.documentId}
-                    padding={3}
-                    background="neutral100"
-                    hasRadius
-                  >
+                  <Box key={task.documentId} padding={3} background="neutral100" hasRadius>
                     <Typography variant="pi" fontWeight="bold" marginBottom={2}>
                       {task.name}
                     </Typography>
@@ -340,3 +277,26 @@ export const TasksSidePanel = ({ model, documentId, slug, id }: TasksSidePanelPr
     </Box>
   );
 };
+
+// Panel component that returns { title, content } or null
+export const TasksPanel = () => {
+  const { collectionType, id } = useParams<{ collectionType?: string; id?: string }>();
+
+  // Don't show panel when creating new entry
+  if (!id || id === 'create') {
+    return null;
+  }
+
+  // Don't show for single types without an id
+  if (collectionType === 'single-types' && !id) {
+    return null;
+  }
+
+  return {
+    title: 'Upcoming Tasks',
+    content: <TasksPanelContent />,
+  };
+};
+
+// Label for the panel
+(TasksPanel as any).type = 'scheduled-tasks';

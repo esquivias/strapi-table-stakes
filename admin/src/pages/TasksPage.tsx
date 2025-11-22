@@ -49,23 +49,41 @@ const TasksPage = () => {
   const [documentsCache, setDocumentsCache] = useState<Record<string, DocumentItem[]>>({});
   const [loading, setLoading] = useState(true);
 
-  // Load tasks and content types on mount
+  // Filter state
+  const [statusFilter, setStatusFilter] = useState<string>('pending');
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
+
+  // Load tasks and content types on mount and when filters change
   useEffect(() => {
     loadData();
-  }, []);
+  }, [statusFilter, dateFrom, dateTo]);
 
   const loadData = async () => {
     try {
       setLoading(true);
 
-      // Load pending tasks from our plugin
+      // Build query params for filtering
+      const params = new URLSearchParams();
+      if (statusFilter && statusFilter !== 'all') {
+        params.append('status', statusFilter);
+      }
+
+      // Load tasks from our plugin with filters
       try {
-        const tasksRes = await get('/strapi-table-stakes/tasks');
+        const tasksRes = await get(`/strapi-table-stakes/tasks?${params.toString()}`);
         if (tasksRes.data) {
-          const pendingTasks = Array.isArray(tasksRes.data)
-            ? tasksRes.data.filter((t: any) => t.status === 'pending')
-            : [];
-          setTasks(pendingTasks);
+          let filteredTasks = Array.isArray(tasksRes.data) ? tasksRes.data : [];
+
+          // Apply date filters client-side
+          if (dateFrom) {
+            filteredTasks = filteredTasks.filter((t: Task) => new Date(t.scheduled_at) >= dateFrom);
+          }
+          if (dateTo) {
+            filteredTasks = filteredTasks.filter((t: Task) => new Date(t.scheduled_at) <= dateTo);
+          }
+
+          setTasks(filteredTasks);
         }
       } catch (err) {
         console.error('Failed to load tasks:', err);
@@ -298,10 +316,64 @@ const TasksPage = () => {
           </Button>
         </Flex>
 
+        {/* Filters */}
+        <Box padding={4} background="neutral100" hasRadius marginBottom={6}>
+          <Typography variant="sigma" textColor="neutral600" marginBottom={3}>
+            FILTERS
+          </Typography>
+          <Flex gap={4} wrap="wrap">
+            <Box style={{ minWidth: '150px' }}>
+              <Field.Root>
+                <Field.Label>Status</Field.Label>
+                <SingleSelect
+                  value={statusFilter}
+                  onChange={(value: string) => setStatusFilter(value)}
+                >
+                  <SingleSelectOption value="all">All</SingleSelectOption>
+                  <SingleSelectOption value="pending">Pending</SingleSelectOption>
+                  <SingleSelectOption value="completed">Completed</SingleSelectOption>
+                  <SingleSelectOption value="partial">Partial</SingleSelectOption>
+                  <SingleSelectOption value="failed">Failed</SingleSelectOption>
+                </SingleSelect>
+              </Field.Root>
+            </Box>
+            <Box style={{ minWidth: '200px' }}>
+              <Field.Root>
+                <Field.Label>From Date</Field.Label>
+                <DateTimePicker
+                  value={dateFrom}
+                  onChange={(date: Date | undefined) => setDateFrom(date)}
+                />
+              </Field.Root>
+            </Box>
+            <Box style={{ minWidth: '200px' }}>
+              <Field.Root>
+                <Field.Label>To Date</Field.Label>
+                <DateTimePicker
+                  value={dateTo}
+                  onChange={(date: Date | undefined) => setDateTo(date)}
+                />
+              </Field.Root>
+            </Box>
+            <Box style={{ alignSelf: 'flex-end' }}>
+              <Button
+                variant="tertiary"
+                onClick={() => {
+                  setStatusFilter('pending');
+                  setDateFrom(undefined);
+                  setDateTo(undefined);
+                }}
+              >
+                Clear Filters
+              </Button>
+            </Box>
+          </Flex>
+        </Box>
+
         {tasks.length === 0 ? (
           <Box paddingTop={11} paddingBottom={11}>
             <EmptyStateLayout
-              content="No pending tasks. Create a task to schedule document operations."
+              content={`No tasks found${statusFilter !== 'all' ? ` with status "${statusFilter}"` : ''}. ${statusFilter === 'pending' ? 'Create a task to schedule document operations.' : 'Try adjusting your filters.'}`}
               action={
                 <Button variant="secondary" onClick={addNewTask}>
                   + Create your first task
